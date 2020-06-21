@@ -1,0 +1,6 @@
+---
+# defaults file for ferm
+
+ferm:
+  only_includes: false
+  fermd: []

@@ -1,0 +1,11 @@
+---
+# handlers file for ferm
+- name: restart_ferm
+  service:
+    name: ferm
+    state: restarted
+
+- name: reload_ferm
+  service:
+    name: ferm
+    state: reloaded

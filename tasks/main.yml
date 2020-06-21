@@ -1,0 +1,55 @@
+---
+
+- name: Find interface which will be ACCEPT for ssh over iptables/ferm
+  find_local_interface:
+  register: finded_interface
+  check_mode: no
+
+- fail: msg="Variable ferm.enable is not defined"
+  when: ferm.enable is undefined
+
+- name: configure ferm start on boot
+  debconf:
+    name: ferm
+    question: 'ferm/enable'
+    vtype: 'boolean'
+    value: "false"
+
+- name: install package
+  apt:
+    name: ferm
+    state: present
+
+- name: create ferm.d
+  file: path=/etc/ferm/ferm.d state=directory mode=0750 owner=root group=root
+
+- name: install conf
+  template:
+    src: ferm.conf.j2
+    dest: /etc/ferm/ferm.conf
+    owner: root
+    group: adm
+    mode: 0644
+  notify:
+    - reload_ferm
+
+- name: install ferm.d configs
+  template:
+    src: ferm.d/{{ item }}.conf.j2
+    dest: /etc/ferm/ferm.d/{{ item }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{ ferm.fermd | default([]) }}"
+  notify:
+    - reload_ferm
+
+- name: configure /etc/default/ferm
+  replace:
+    dest: /etc/default/ferm
+    regexp: '^ENABLED=.*$'
+    replace: ENABLED="{% if ferm.enable %}yes{% else %}no{% endif %}"
+  notify:
+    - reload_ferm
+
+- meta: flush_handlers

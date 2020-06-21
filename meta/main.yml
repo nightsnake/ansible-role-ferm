@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: --
+  description: ferm install and configure.
+  company: --
+  min_ansible_version: 2.2
+  github_branch: master
+  platforms:
+    - name: Ubuntu
+      versions:
+        - xenial
+        - bionic
+    - name: CentOS
+      versions:
+        - 7

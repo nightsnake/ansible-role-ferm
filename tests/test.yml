@@ -1,0 +1,7 @@
+---
+
+- hosts: localhost
+  # remote_user: root
+  become: yes
+  roles:
+    - { role: ferm, ferm: { enable: True } }

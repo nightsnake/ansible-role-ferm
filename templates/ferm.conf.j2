@@ -1,0 +1,49 @@
+# -*- shell-script -*-
+#
+#  Configuration file for ferm(1).
+#
+{% if (ferm.only_includes | default(false)) == false %}
+{% if internal_ifaces is defined %}
+@def $INTERNAL_IFACES = (lo {{ internal_ifaces|join(' ') }});
+{% endif %}
+@def $FINDED_LOCAL_IFACES = ( {{ finded_interface['meta']|join(' ') }});
+
+table filter {
+    chain INPUT {
+        policy DROP;
+
+        # connection tracking
+        mod state state INVALID DROP;
+        mod state state (ESTABLISHED RELATED) ACCEPT;
+
+        # allow local packet
+        interface lo ACCEPT;
+
+        # respond to ping
+        proto icmp ACCEPT;
+
+        # allow SSH connections
+{% if finded_interface['meta']|length > 0 %}
+        interface $FINDED_LOCAL_IFACES proto tcp dport ssh ACCEPT;
+{% else %}
+        proto tcp dport ssh ACCEPT;
+{% endif %}
+    }
+    chain OUTPUT {
+        policy ACCEPT;
+
+        # connection tracking
+        #mod state state INVALID DROP;
+        mod state state (ESTABLISHED RELATED) ACCEPT;
+    }
+    chain FORWARD {
+        policy DROP;
+
+        # connection tracking
+        mod state state INVALID DROP;
+        mod state state (ESTABLISHED RELATED) ACCEPT;
+    }
+}
+{% endif %}
+
+@include 'ferm.d/';
